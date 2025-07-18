@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from typing import Any, Dict, List, Optional
 import json
 import os
+from dotenv import load_dotenv
 
 import mcp.types as types
 from mcp.server import Server
@@ -19,6 +20,9 @@ import mcp.server.stdio
 
 class EmailMCPServer:
     def __init__(self):
+        # Load environment variables from .env file
+        load_dotenv()
+        
         self.server = Server("email-mcp")
         self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -74,7 +78,7 @@ class EmailMCPServer:
             if not self.smtp_username or not self.smtp_password:
                 return [types.TextContent(
                     type="text",
-                    text="Error: SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD environment variables."
+                    text="Error: SMTP credentials not configured. Please set SMTP_USERNAME and SMTP_PASSWORD in environment variables or .env file."
                 )]
 
             to_email = args.get("to")
