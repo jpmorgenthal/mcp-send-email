@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Email MCP Server - A tool for sending emails via SMTP with TLS support
+Stdio version for Claude Desktop
 """
 import smtplib
 import ssl
@@ -9,7 +10,6 @@ from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
-
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,29 +45,29 @@ def send_email(to: str, subject: str, message: str, cc: str = "") -> str:
         msg = MIMEMultipart()
         msg['From'] = smtp_username
         msg['To'] = to
+        msg['Subject'] = subject
+        
+        # Add CC if provided
         if cc:
             msg['Cc'] = cc
-        msg['Subject'] = subject
-
-        # Attach message body
+            recipients = [to, cc]
+        else:
+            recipients = [to]
+        
+        # Add message body
         msg.attach(MIMEText(message, 'plain'))
-
-        # Create SMTP connection with TLS
+        
+        # Create SSL context
         context = ssl.create_default_context()
         
+        # Send email
         with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls(context=context)
             server.login(smtp_username, smtp_password)
-            
-            # Send email
-            recipients = [to]
-            if cc:
-                recipients.append(cc)
-            
-            server.sendmail(smtp_username, recipients, msg.as_string())
-
-        return f"Email sent successfully to {to}" + (f" (CC: {cc})" if cc else "")
-
+            server.send_message(msg, to_addrs=recipients)
+        
+        return f"Email successfully sent to {to}" + (f" and cc'd to {cc}" if cc else "")
+        
     except smtplib.SMTPAuthenticationError:
         return "Error: SMTP authentication failed. Please check your username and password."
     except smtplib.SMTPException as e:
