@@ -40,9 +40,18 @@ export SMTP_USERNAME="your-email@gmail.com"
 export SMTP_PASSWORD="your-app-password"
 ```
 
+## Running the Server
+
+1. Start the MCP server:
+```bash
+python email_mcp.py
+```
+
+The server will start on `http://127.0.0.1:8000` using SSE (Server-Sent Events) transport.
+
 ## Configuration with Claude Code
 
-To use this MCP server with Claude Code, add it to your MCP configuration:
+To use this remote MCP server with Claude Code, you need to configure it as a remote server:
 
 ### 1. Add to Claude Code Settings
 
@@ -52,46 +61,47 @@ Add the following to your Claude Code MCP configuration file (typically `~/.conf
 {
   "mcpServers": {
     "email": {
-      "command": "python",
-      "args": ["/path/to/your/email_mcp.py"],
-      "env": {
-        "SMTP_HOST": "smtp.gmail.com",
-        "SMTP_PORT": "587",
-        "SMTP_USERNAME": "your-email@gmail.com",
-        "SMTP_PASSWORD": "your-app-password"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything",
+        "mcp-remote",
+        "http://127.0.0.1:8000"
+      ]
     }
   }
 }
 ```
 
-### 2. Using .env file (Recommended)
+### 2. Alternative: Using MCP CLI
 
-If you have a `.env` file in the same directory as `email_mcp.py`, use this simpler configuration:
-
-```json
-{
-  "mcpServers": {
-    "email": {
-      "command": "python",
-      "args": ["/path/to/your/email_mcp.py"]
-    }
-  }
-}
-```
-
-The app will automatically load settings from your `.env` file.
-
-### 3. Alternative: Global Environment Variables
-
-Set environment variables globally and use the same simple configuration:
+You can also use the MCP CLI to connect to the remote server:
 
 ```bash
-# Add to your shell profile (.bashrc, .zshrc, etc.)
-export SMTP_HOST="smtp.gmail.com"
-export SMTP_PORT="587"
-export SMTP_USERNAME="your-email@gmail.com"
-export SMTP_PASSWORD="your-app-password"
+npx @modelcontextprotocol/cli mcp-remote http://127.0.0.1:8000
+```
+
+### 3. Docker Configuration (Optional)
+
+For containerized deployment, you can use Docker:
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["python", "email_mcp.py"]
+```
+
+Build and run:
+```bash
+docker build -t email-mcp .
+docker run -p 8000:8000 --env-file .env email-mcp
 ```
 
 ## Usage
